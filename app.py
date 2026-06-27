@@ -698,9 +698,13 @@ def show_experiment_dashboard():
     st.subheader("Dataset Overview")
     dataset_df = pd.DataFrame({
         "Dataset": ["ASVspoof2019 LA", "Fake-or-Real"],
-        "Real / Bonafide": [500, 500],
-        "Fake / Spoof": [500, 500],
-        "Total": [1000, 1000]
+        "Audio Type / Category": [
+            "Bonafide + Logical Access spoof audio",
+            "Real + TTS-generated fake audio"
+        ],
+        "Real / Bonafide Samples": [500, 500],
+        "Fake / Spoof Samples": [500, 500],
+        "Total Samples": [1000, 1000],
     })
     st.dataframe(dataset_df, use_container_width=True, hide_index=True)
 
