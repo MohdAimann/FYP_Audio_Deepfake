@@ -73,6 +73,81 @@ st.markdown(
         color: #1D4ED8;
         font-weight: 800;
     }
+
+    /* ===== Login / Register page ===== */
+    .login-title-wrap {
+        text-align: center;
+        margin-top: 10px;
+        margin-bottom: 6px;
+    }
+    .login-title {
+        font-size: 30px;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 4px;
+    }
+    .login-subtitle {
+        font-size: 15px;
+        color: #6B7280;
+        margin-bottom: 10px;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        padding: 6px 6px 10px 6px;
+    }
+
+    /* ===== Dataset Overview table ===== */
+    .dataset-table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #E5E7EB;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    }
+    .dataset-table th {
+        background-color: #F9FAFB;
+        color: #374151;
+        font-weight: 700;
+        font-size: 13px;
+        text-align: left;
+        padding: 10px 14px;
+        border-bottom: 1px solid #E5E7EB;
+    }
+    .dataset-table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #F1F5F9;
+        vertical-align: middle;
+    }
+    .dataset-table tr:last-child td {
+        border-bottom: none;
+    }
+    .dataset-name-cell .dataset-name {
+        font-weight: 700;
+        font-size: 15px;
+        color: #111827;
+        display: block;
+    }
+    .dataset-name-cell .dataset-category {
+        font-size: 11.5px;
+        color: #6B7280;
+        font-style: italic;
+        display: block;
+        margin-top: 2px;
+    }
+    .dataset-table th.dataset-name-col {
+        width: 34%;
+    }
+    .dataset-table th.num-col,
+    .dataset-table td.num-col {
+        text-align: center;
+        width: 16%;
+        font-size: 13px;
+        color: #1F2937;
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -338,38 +413,62 @@ def auth_page():
     if st.session_state.authenticated:
         return True
 
-    st.markdown("### User Access")
-    st.write("Login or register to access the dashboard.")
+    # Centered title block
+    st.markdown(
+        """
+        <div class="login-title-wrap">
+            <div class="login-title">🔐 User Access</div>
+            <div class="login-subtitle">Login or register to access the dashboard.</div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    col1, col2, col3 = st.columns([1, 1.4, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        auth_tab = st.radio("Choose option", ["Login", "Register"], horizontal=True)
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        with st.container(border=True):
+            auth_tab = st.radio(
+                "Choose option",
+                ["Login", "Register"],
+                horizontal=True,
+                label_visibility="collapsed"
+            )
 
-        if auth_tab == "Register":
-            confirm_password = st.text_input("Confirm Password", type="password")
-            if st.button("Register", use_container_width=True):
-                if username.strip() == "" or password.strip() == "":
-                    st.error("Username and password cannot be empty.")
-                elif password != confirm_password:
-                    st.error("Passwords do not match.")
-                elif len(password) < 5:
-                    st.error("Password must be at least 5 characters.")
-                else:
-                    success, message = register_user(username, password)
-                    if success:
-                        st.success(message)
+            st.write("")
+
+            username = st.text_input("Username", placeholder="Enter your username")
+            password = st.text_input("Password", type="password", placeholder="Enter your password")
+
+            if auth_tab == "Register":
+                confirm_password = st.text_input(
+                    "Confirm Password", type="password", placeholder="Re-enter your password"
+                )
+
+                st.write("")
+
+                if st.button("Register", use_container_width=True):
+                    if username.strip() == "" or password.strip() == "":
+                        st.error("Username and password cannot be empty.")
+                    elif password != confirm_password:
+                        st.error("Passwords do not match.")
+                    elif len(password) < 5:
+                        st.error("Password must be at least 5 characters.")
                     else:
-                        st.error(message)
-        else:
-            if st.button("Login", use_container_width=True):
-                if verify_user(username, password):
-                    st.session_state.authenticated = True
-                    st.session_state.username = username.strip()
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password.")
+                        success, message = register_user(username, password)
+                        if success:
+                            st.success(message)
+                        else:
+                            st.error(message)
+            else:
+                st.write("")
+
+                if st.button("Login", use_container_width=True):
+                    if verify_user(username, password):
+                        st.session_state.authenticated = True
+                        st.session_state.username = username.strip()
+                        st.rerun()
+                    else:
+                        st.error("Invalid username or password.")
 
     return False
 
@@ -377,7 +476,7 @@ def auth_page():
 # PAGE SECTIONS
 # =========================
 def show_user_dataset_dashboard():
-    st.markdown('<div class="section-title">My Dataset Dashboard</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Testing New Dataset</div>', unsafe_allow_html=True)
 
     history_df = get_user_dataset_history(st.session_state.username)
 
@@ -477,6 +576,30 @@ def show_user_dataset_dashboard():
         ["SVM", "Random Forest", "XGBoost"],
         default=["SVM"],
         key="upload_classifiers"
+    )
+
+    st.info("Upload a CSV containing feature columns such as mfcc_1, mfcc_2, wavlm_1, wavlm_2, and label.")
+
+    example_df = pd.DataFrame({
+        "dataset": ["example"],
+        "file_id": ["sample_001"],
+        "label": [0],
+        "mfcc_1": [0.123],
+        "mfcc_2": [0.456],
+        "mfcc_3": [0.789],
+        "wavlm_1": [0.111],
+        "wavlm_2": [0.222],
+        "wavlm_3": [0.333],
+    })
+
+    st.write("Example CSV Format")
+    st.dataframe(example_df, use_container_width=True)
+
+    st.download_button(
+        label="Download Example CSV",
+        data=example_df.to_csv(index=False),
+        file_name="example_feature_upload.csv",
+        mime="text/csv"
     )
     uploaded_file = st.file_uploader("Upload Feature CSV", type=["csv"])
 
@@ -696,17 +819,44 @@ def show_experiment_dashboard():
         st.metric("Evaluation Types", "2")
 
     st.subheader("Dataset Overview")
-    dataset_df = pd.DataFrame({
-        "Dataset": ["ASVspoof2019 LA", "Fake-or-Real"],
-        "Audio Type / Category": [
-            "Bonafide + Logical Access spoof audio",
-            "Real + TTS-generated fake audio"
-        ],
-        "Real / Bonafide Samples": [500, 500],
-        "Fake / Spoof Samples": [500, 500],
-        "Total Samples": [1000, 1000],
-    })
-    st.dataframe(dataset_df, use_container_width=True, hide_index=True)
+    dataset_overview_rows = [
+        {
+            "name": "ASVspoof2019 LA",
+            "category": "bonafide + logical access spoof audio",
+            "real": 500,
+            "fake": 500,
+            "total": 1000,
+        },
+        {
+            "name": "Fake-or-Real",
+            "category": "real + TTS-generated fake audio",
+            "real": 500,
+            "fake": 500,
+            "total": 1000,
+        },
+    ]
+
+    dataset_table_rows_html = "".join(
+        '<tr>'
+        f'<td class="dataset-name-cell"><span class="dataset-name">{row["name"]}</span>'
+        f'<span class="dataset-category">({row["category"]})</span></td>'
+        f'<td class="num-col">{row["real"]}</td>'
+        f'<td class="num-col">{row["fake"]}</td>'
+        f'<td class="num-col">{row["total"]}</td>'
+        '</tr>'
+        for row in dataset_overview_rows
+    )
+
+    dataset_table_html = (
+        '<table class="dataset-table"><thead><tr>'
+        '<th class="dataset-name-col">Dataset</th>'
+        '<th class="num-col">Real / Bonafide</th>'
+        '<th class="num-col">Fake / Spoof</th>'
+        '<th class="num-col">Total</th>'
+        f'</tr></thead><tbody>{dataset_table_rows_html}</tbody></table>'
+    )
+
+    st.markdown(dataset_table_html, unsafe_allow_html=True)
 
     st.subheader("Feature Extraction Output")
     feature_df = pd.DataFrame({
@@ -812,7 +962,7 @@ if st.sidebar.button("Logout"):
     st.rerun()
 
 role = get_user_role(st.session_state.username)
-page_options = ["My Dataset Dashboard", "Experiment Dashboard"]
+page_options = ["Testing New Dataset", "Experiment Dashboard"]
 if role == "admin":
     page_options.append("Admin Dashboard")
 
@@ -820,18 +970,18 @@ user_role = get_user_role(st.session_state.username)
 
 if user_role == "admin":
     page_options = [
-        "My Dataset Dashboard",
+        "Testing New Dataset",
         "Experiment Dashboard",
         "Admin Dashboard"
     ]
 else:
     page_options = [
-        "My Dataset Dashboard"
+        "Testing New Dataset"
     ]
 
 selected_page = st.sidebar.radio("Navigation", page_options)
 
-if selected_page == "My Dataset Dashboard":
+if selected_page == "Testing New Dataset":
     show_user_dataset_dashboard()
 
 elif selected_page == "Experiment Dashboard":
